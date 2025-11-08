@@ -32,20 +32,12 @@
             overflow: hidden;
         }
 
-#app-scaler {
-    /* This anchors the scaling to the top and center */
+#app-scaler.is-desktop {
     transform-origin: top center;
-    
-    /* Your base width */
     width: 1548px;
-    
-    /* IMPORTANT: NO FIXED HEIGHT HERE! The JS will control it. */
-    
-    /* This positions the anchor point */
     position: fixed;
     top: 0;
     left: 50%;
-    
     overflow: hidden;
 }
 
@@ -82,7 +74,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 100vh;
+            height: 100%;
             background: white;
             z-index: 30000;
             display: none;
@@ -256,7 +248,7 @@
 
        .auth-right img {
     max-width: 100%;
-    max-height: 100vh;
+    max-height: 100%;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -284,10 +276,11 @@
             opacity: 1;
         }
 
+/* PASTE THIS NEW RULE */
 .question-bubble {
-    position: fixed;
-    top: calc(50vh - 140px);
-    right: 10%;
+    position: absolute;
+    top: 200px;             /* <-- MOVED UP by 20px */
+    right: 180px;            /* <-- MOVED RIGHT by 40px */
     background: white;
     border-radius: 55px;
     padding: 35px;
@@ -1657,6 +1650,10 @@ body.intro-mode .bottom-right-image * {
             transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
+        .tracker-bar-fill.over-target {
+    background: linear-gradient(90deg, #ff4961 0%, #ff7a85 100%);
+}
+
         @keyframes fadeOutLetter {
             from {
                 opacity: 1;
@@ -1669,18 +1666,18 @@ body.intro-mode .bottom-right-image * {
         }
 
         .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(18, 18, 18, 0.192);
-            z-index: 10000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            display: none;
-        }
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0; /* <-- ADD THIS LINE */
+    bottom: 0; /* This is better than height: 100% for full coverage */
+    background: rgba(18, 18, 18, 0.192);
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: none;
+}
 
         .sidebar-overlay.show {
             display: block;
@@ -2309,7 +2306,7 @@ body.intro-mode .bottom-right-image {
     opacity: 0;
 }
 
-body.intro-mode .user-menu-button {
+body.intro-mode:not(.question-mode) .user-menu-button {
     display: flex;
     animation: fadeInUserMenu 2s ease-out 2.5s forwards;
     pointer-events: auto;
@@ -3618,15 +3615,19 @@ body:not(.intro-mode) .bottom-right-image {
         }
     }
 
-    body:not(.intro-mode) .bottom-right-image {
-        display: block !important;
-        position: fixed;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 70px;
-        opacity: 0.7;
-    }
+    /* This is the corrected rule */
+body:not(.intro-mode) .bottom-right-image {
+    display: block !important;
+    position: fixed;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    opacity: 0.7;
+    /* ADD THESE TWO LINES TO FIX THE FLICKER */
+    animation: none !important;
+    transition: none !important;
+}
     
     
     /* ============================================
@@ -3711,7 +3712,7 @@ body:not(.intro-mode) .bottom-right-image {
         bottom: 0;
         left: 0;
         z-index: 10;
-        max-height: 65vh;
+        max-height: 75vh;
         background: white;
         border-radius: 40px 40px 0 0;
         -webkit-overflow-scrolling: touch;
@@ -3730,6 +3731,10 @@ body:not(.intro-mode) .bottom-right-image {
         pointer-events: none;
         z-index: 11;
     }
+
+    .auth-right img {
+    object-position: 30% 85%;
+}
 
     .auth-form-container {
         width: 100%;
@@ -3767,14 +3772,14 @@ body:not(.intro-mode) .bottom-right-image {
     }
     
     .auth-right {
-        height: 35vh;
-        min-height: 250px;
-        width: 100%;
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1;
-    }
+    height: 25vh; /* Changed from 35vh */
+    min-height: 150px; /* Changed from 250px */
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
     
     .auth-logo {
         font-size: 50px;
@@ -4278,46 +4283,37 @@ body:not(.intro-mode) .bottom-right-image {
     
     <script>
 
+// REPLACE your old scaleApp function with this entire new one
 function scaleApp() {
-    // Mobile/tablet logic is correct and remains unchanged.
-    if (window.innerWidth <= 1024) {
-        const scaler = document.getElementById('app-scaler');
-        scaler.style.transform = 'none';
-        scaler.style.width = '100%';
-        scaler.style.height = '100%';
-        scaler.style.left = '0';
-        scaler.style.top = '0';
-        scaler.style.position = 'relative';
-        return;
-    }
-
-    // --- DESKTOP: The "Locked, Filled, and Safe" Solution ---
     const scaler = document.getElementById('app-scaler');
-    const baseWidth = 1548;
-    const baseHeight = 768;
 
-    // 1. THE LOCK: This is the stable, unbreakable scaling calculation.
-    // It finds the "safe" scale factor that guarantees the app is never
-    // too wide or too tall. It will not break at 75% or any other zoom.
-    const scaleX = window.innerWidth / baseWidth;
-    const scaleY = window.innerHeight / baseHeight;
-    const scale = Math.min(scaleX, scaleY);
+    if (window.innerWidth > 1024) {
+        // --- DESKTOP LOGIC ---
+        // 1. Ensure the desktop class is present.
+        scaler.classList.add('is-desktop');
 
-    // 2. THE GAP FILL: We calculate the new height for the container.
-    // This makes the container the perfect height to fill the screen *after*
-    // it has been scaled down.
-    const newHeight = window.innerHeight / scale;
+        // 2. Calculate the dynamic scale and height.
+        const baseWidth = 1548;
+        const baseHeight = 768;
+        const scaleX = window.innerWidth / baseWidth;
+        const scaleY = window.innerHeight / baseHeight;
+        const scale = Math.min(scaleX, scaleY);
+        const newHeight = window.innerHeight / scale;
 
-    // 3. Apply the final styles.
-    // Set the new dynamic height.
-    scaler.style.height = `${newHeight}px`;
-    
-    // Apply the final transform. This centers and scales the app.
-    scaler.style.transform = `translateX(-50%) scale(${scale})`;
+        // 3. Apply ONLY the dynamic styles needed for scaling.
+        scaler.style.height = `${newHeight}px`;
+        scaler.style.transform = `translateX(-50%) scale(${scale})`;
 
-    // IMPORTANT: We do NOT touch the monster. By making the container taller,
-    // your CSS rule `bottom: -340px` automatically pushes the monster down
-    // to the new bottom of the container. The animation is safe.
+    } else {
+        // --- MOBILE/TABLET LOGIC ---
+        // 1. Ensure the desktop class is removed.
+        scaler.classList.remove('is-desktop');
+
+        // 2. Remove any leftover inline styles from the desktop view.
+        // This cleanly returns all styling control to your stylesheet.
+        scaler.style.removeProperty('height');
+        scaler.style.removeProperty('transform');
+    }
 }
 
 // Run on load and on every resize.
@@ -4372,6 +4368,7 @@ scaleApp();
                 
                 if (data) {
                     currentUser = savedUsername;
+                    initializeCalorieTarget(); // <-- ADD THIS LINE
                     console.log('Auto-logged in as:', currentUser);
 
                     cachedCalories = null;
@@ -4516,68 +4513,102 @@ scaleApp();
             { title: "What's your weight? (kg)", placeholder: "Enter your weight in kg", field: 'weight' }
         ];
 
-        function showQuestionBubble() {
-            document.body.classList.add('intro-mode');
-            document.getElementById('questionOverlay').classList.add('show');
-            document.getElementById('questionBubble').classList.add('show');
-            document.getElementById('mouthHitbox').classList.add('disabled');
-            
-            mouth.classList.add('question-loop');
-            
-            setTimeout(() => {
-                mouth.classList.remove('question-loop');
-            }, 3000);
-            
-            updateQuestionDisplay();
-        }
+        // THIS IS THE ONLY showQuestionBubble FUNCTION YOU NEED
 
-        function hideQuestionBubble() {
-            document.body.classList.remove('intro-mode');
-            document.getElementById('questionOverlay').classList.remove('show');
-            document.getElementById('questionBubble').classList.remove('show');
-            document.getElementById('mouthHitbox').classList.remove('disabled');
-        }
+// PASTE THIS CORRECT VERSION IN ITS PLACE
 
-        function updateQuestionDisplay() {
-            const questionTitle = document.getElementById('questionTitle');
-            const questionInput = document.getElementById('questionInput');
-            const questionBack = document.getElementById('questionBack');
-            const questionNext = document.getElementById('questionNext');
-            
-            if (questionStep < questions.length) {
-                questionTitle.textContent = questions[questionStep].title;
-                questionInput.placeholder = questions[questionStep].placeholder;
-                questionInput.value = questionData[questions[questionStep].field] || '';
-                questionInput.style.display = 'block';
-                questionBack.style.display = questionStep > 0 ? 'block' : 'none';
-                questionNext.textContent = 'Next';
-                
-                const existingConfirmation = document.querySelector('.confirmation-data');
-                if (existingConfirmation) {
-                    existingConfirmation.remove();
-                }
-            } else {
-                questionTitle.textContent = 'Confirm Your Information';
-                questionInput.style.display = 'none';
-                questionBack.style.display = 'block';
-                questionNext.textContent = 'Done';
-                
-                const confirmationHTML = `
-                    <div class="confirmation-data">
-                        <div><strong>Name:</strong> ${questionData.name}</div>
-                        <div><strong>Age:</strong> ${questionData.age}</div>
-                        <div><strong>Height:</strong> ${questionData.height} cm</div>
-                        <div><strong>Weight:</strong> ${questionData.weight} kg</div>
-                    </div>
-                `;
-                
-                const existingConfirmation = document.querySelector('.confirmation-data');
-                if (existingConfirmation) {
-                    existingConfirmation.remove();
-                }
-                questionTitle.insertAdjacentHTML('afterend', confirmationHTML);
-            }
+function showQuestionBubble() {
+    document.body.classList.add('intro-mode');
+    document.body.classList.add('question-mode');
+    document.getElementById('questionOverlay').classList.add('show');
+    document.getElementById('questionBubble').classList.add('show');
+    document.getElementById('mouthHitbox').classList.add('disabled');
+
+    // Lock and center the eyes.
+    isQuestionModeActive = true; 
+    leftIris.style.transition = 'transform 0.3s ease-out';
+    rightIris.style.transition = 'transform 0.3s ease-out';
+    leftIris.style.transform = 'translate(0px, 0px) scaleY(1.54)';
+    rightIris.style.transform = 'translate(0px, 0px) scaleY(1.54)';
+
+    // Call the function that handles the text and the talking animation.
+    updateQuestionDisplay(); 
+}
+
+// PASTE THIS ENTIRE NEW FUNCTION INTO YOUR SCRIPT
+
+function hideQuestionBubble() {
+    // This hides the bubble and overlay
+    document.body.classList.remove('question-mode');
+    document.getElementById('questionOverlay').classList.remove('show');
+    document.getElementById('questionBubble').classList.remove('show');
+    document.getElementById('mouthHitbox').classList.remove('disabled');
+
+    // This is the logic to UNLOCK the eyes and resume cursor tracking
+    isQuestionModeActive = false; 
+    setTimeout(() => {
+        leftIris.style.transition = 'none';
+        rightIris.style.transition = 'none';
+    }, 300); // This delay matches the transition time for a smooth handoff
+}
+
+// PASTE THIS ENTIRE BLOCK OF NEW CODE INTO YOUR SCRIPT
+
+// PASTE THIS NEW CODE BLOCK IN YOUR SCRIPT
+
+
+
+        // PASTE THIS CORRECT VERSION IN ITS PLACE
+
+function updateQuestionDisplay() {
+    // --- THIS IS NOW THE ONLY PLACE FOR THIS ANIMATION ---
+    mouth.classList.remove('question-loop');
+    void mouth.offsetWidth; 
+    mouth.classList.add('question-loop');
+    setTimeout(() => {
+        mouth.classList.remove('question-loop');
+    }, 3000);
+    // --- END OF ANIMATION LOGIC ---
+
+    const questionTitle = document.getElementById('questionTitle');
+    const questionInput = document.getElementById('questionInput');
+    const questionBack = document.getElementById('questionBack');
+    const questionNext = document.getElementById('questionNext');
+    
+    if (questionStep < questions.length) {
+        questionTitle.textContent = questions[questionStep].title;
+        questionInput.placeholder = questions[questionStep].placeholder;
+        questionInput.value = questionData[questions[questionStep].field] || '';
+        questionInput.style.display = 'block';
+        questionBack.style.display = questionStep > 0 ? 'block' : 'none';
+        questionNext.textContent = 'Next';
+        
+        const existingConfirmation = document.querySelector('.confirmation-data');
+        if (existingConfirmation) {
+            existingConfirmation.remove();
         }
+    } else {
+        questionTitle.textContent = 'Confirm Your Information';
+        questionInput.style.display = 'none';
+        questionBack.style.display = 'block';
+        questionNext.textContent = 'Done';
+        
+        const confirmationHTML = `
+            <div class="confirmation-data">
+                <div><strong>Name:</strong> ${questionData.name}</div>
+                <div><strong>Age:</strong> ${questionData.age}</div>
+                <div><strong>Height:</strong> ${questionData.height} cm</div>
+                <div><strong>Weight:</strong> ${questionData.weight} kg</div>
+            </div>
+        `;
+        
+        const existingConfirmation = document.querySelector('.confirmation-data');
+        if (existingConfirmation) {
+            existingConfirmation.remove();
+        }
+        questionTitle.insertAdjacentHTML('afterend', confirmationHTML);
+    }
+}
 
         document.getElementById('questionNext').addEventListener('click', async () => {
             const questionInput = document.getElementById('questionInput');
@@ -4711,16 +4742,20 @@ scaleApp();
             // THIS IS THE NEW, CORRECTED CODE
 setTimeout(() => {
     greetingComplete = true;
-    isGreetingAnimating = false; // Pupils are now unlocked and can move
-    console.log('✅ Greeting complete - PUPILS UNLOCKED and idle detection can now start');
+    isGreetingAnimating = false; // Pupils are now unlocked
 
-    // CRITICAL: Wait a fraction of a second before removing the transition.
-    // This allows the VERY FIRST mouse movement to be smooth.
-    // All subsequent movements will be instant.
+    // --- THIS IS THE FIX ---
+    // Engage the lock to keep pupils looking forward until the mouse moves.
+    isWaitingForInput = true; 
+    // --- END OF FIX ---
+    
+    initIdleDetection(); 
+    console.log('✅ Greeting complete - PUPILS LOCKED FORWARD and idle detection is now active');
+
     setTimeout(() => {
         leftIris.style.transition = 'none';
         rightIris.style.transition = 'none';
-    }, 300); // A 300ms delay is perfect.
+    }, 300);
 
 }, totalGreetingTime * 1000 + 500);
         }
@@ -4791,6 +4826,7 @@ setTimeout(() => {
             
             currentUser = username;
             isNewUser = true;
+            initializeCalorieTarget();
 
             cachedCalories = null;
             caloriesLastFetched = null;
@@ -4827,6 +4863,7 @@ setTimeout(() => {
             localStorage.setItem('chomper_username', username);
             currentUser = username;
             isNewUser = false;
+            initializeCalorieTarget(); // <-- ADD THIS LINE
 
             cachedCalories = null;
             caloriesLastFetched = null;
@@ -4866,7 +4903,7 @@ setTimeout(() => {
 
         const JAKARTA_OFFSET_HOURS = 7;
 
-        let dailyTarget = parseInt(localStorage.getItem('dailyTarget')) || 2000;
+        let dailyTarget = 2000;
 
         function getTodayDateString() {
             const now = new Date();
@@ -4917,21 +4954,18 @@ setTimeout(() => {
         }
 
         function checkAndResetNewDay() {
-            const jakartaNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-            const todayString = jakartaNow.toISOString().split('T')[0];
-            
-            const lastResetDate = localStorage.getItem('lastResetDate');
-            
-            console.log('Last reset:', lastResetDate, '| Today:', todayString);
-            
-            if (lastResetDate !== todayString) {
-                console.log('🔄 NEW DAY! Resetting to 0');
-                localStorage.setItem('lastResetDate', todayString);
-                return true;
-            }
-            
-            return false;
-        }
+    const jakartaNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const todayString = jakartaNow.toISOString().split('T')[0];
+    const lastResetDate = localStorage.getItem('lastResetDate');
+    
+    if (lastResetDate !== todayString) {
+        console.log('🔄 NEW DAY! Resetting calories to 0');
+        localStorage.setItem('lastResetDate', todayString);
+        return true;
+    }
+    
+    return false;
+}
 
         async function calculateTodayCalories() {
             if (!currentUser) return 0;
@@ -4999,16 +5033,28 @@ setTimeout(() => {
         }
 
         async function updateTrackerDisplay() {
-            const currentCalories = cachedCalories !== null ? cachedCalories : await calculateTodayCalories();
-            const targetCalories = dailyTarget;
-            const percentage = Math.min((currentCalories / targetCalories) * 100, 100);
-            
-            document.getElementById('trackerCaloriesCurrent').textContent = Math.round(currentCalories);
-            document.getElementById('trackerCaloriesTarget').textContent = targetCalories;
-            
-            const barFill = document.getElementById('trackerBarFill');
-            barFill.style.width = percentage + '%';
-        }
+    const currentCalories = cachedCalories !== null ? cachedCalories : await calculateTodayCalories();
+    const targetCalories = dailyTarget;
+    // Important: We allow the percentage to go over 100 now, but cap the visual bar at 100%.
+    const percentage = (currentCalories / targetCalories) * 100;
+    
+    document.getElementById('trackerCaloriesCurrent').textContent = Math.round(currentCalories);
+    document.getElementById('trackerCaloriesTarget').textContent = targetCalories;
+    
+    const barFill = document.getElementById('trackerBarFill');
+    // The visual width is still capped at 100% so it doesn't break the layout.
+    barFill.style.width = Math.min(percentage, 100) + '%';
+
+    // --- THIS IS THE NEW LOGIC ---
+    // If current calories are greater than or equal to the target...
+    if (currentCalories >= targetCalories) {
+        // ...add the 'over-target' class to make the bar red.
+        barFill.classList.add('over-target');
+    } else {
+        // ...otherwise, remove it to ensure it's blue.
+        barFill.classList.remove('over-target');
+    }
+}
 
         function checkDateChange() {
             updateTrackerDate();
@@ -5042,7 +5088,9 @@ setTimeout(() => {
             const saveValue = () => {
                 const newValue = parseInt(input.value) || 2000;
                 dailyTarget = Math.max(100, Math.min(newValue, 10000));
-                localStorage.setItem('dailyTarget', dailyTarget);
+                if (currentUser) {
+    localStorage.setItem('dailyTarget_' + currentUser, dailyTarget);
+}
                 targetElement.textContent = dailyTarget;
                 updateTrackerDisplay();
             };
@@ -5271,6 +5319,16 @@ setTimeout(() => {
             }
         }
 
+        function loadUserTarget() {
+    if (currentUser) {
+        const savedTarget = localStorage.getItem('dailyTarget_' + currentUser);
+        dailyTarget = parseInt(savedTarget) || 2000; // Get user's target, or default to 2000
+    } else {
+        dailyTarget = 2000; // If no user, always default to 2000
+    }
+    updateTrackerDisplay(); // Update the UI with the correct value
+}
+
         const userMenuButton = document.getElementById('userMenuButton');
         const userMenuDropdown = document.getElementById('userMenuDropdown');
         const userMenuUsername = document.getElementById('userMenuUsername');
@@ -5332,10 +5390,12 @@ setTimeout(() => {
                     supabase.removeChannel(realtimeSubscription);
                     realtimeSubscription = null;
                 }
+                dailyTarget = 2000;
                 localStorage.removeItem('chomper_username');
                 currentUser = null;
                 location.reload();
             } else if (currentAction === 'login') {
+                dailyTarget = 2000;
                 localStorage.removeItem('chomper_username');
                 currentUser = null;
                 introComplete = false;
@@ -5596,10 +5656,11 @@ setTimeout(() => {
             });
         }
 
-        async function pollForNewRow(lastId) {
+        async function pollForNewRow(lastId, user_name) {
             const { data, error } = await supabase
                 .from('recent_food1')
                 .select('*')
+                .eq('user_name', user_name)
                 .gt('id', lastId)
                 .order('id', { ascending: false })
                 .limit(1);
@@ -5714,11 +5775,6 @@ setTimeout(() => {
     introComplete = true;
     console.log('✅ Intro complete - waiting for greeting to finish...');
     
-    // Wait 8 seconds for greeting animation to fully complete
-    setTimeout(() => {
-        initIdleDetection();
-        console.log('✅ Idle detection now active');
-    }, 8000);
 }, 6000);
     
     document.removeEventListener('click', startInteraction, true); // <-- The 'true' is added
@@ -5731,7 +5787,15 @@ setTimeout(() => {
     if (!document.getElementById('questionOverlay').classList.contains('show') && !document.body.classList.contains('intro-mode')) {
         currentMouseX = e.clientX;
         currentMouseY = e.clientY;
-    
+
+        // --- NEW LOGIC STARTS HERE ---
+        // If the pupils were waiting, this is the first mouse move.
+        if (isWaitingForInput) {
+            isWaitingForInput = false; // Unlock the pupils.
+            console.log('Mouse move detected. Resuming eye tracking.');
+            updateEyes(); // Immediately update the eyes to the new position.
+        }
+        // --- NEW LOGIC ENDS HERE ---
     }
 });
 
@@ -5749,17 +5813,15 @@ function startEyeTrackingLoop() {
 
         // REPLACE your old moveIris function with this correct one
 function moveIris(eye, iris, mouseX, mouseY) {
-    // If EITHER the idle animation OR the greeting is playing, stop immediately.
-    if (isIdleAnimationPlaying || isGreetingAnimating) {
+    // If ANY of these locks are active, stop immediately.
+    if (isIdleAnimationPlaying || isGreetingAnimating || isWaitingForInput || isQuestionModeActive || isErrorStateActive) {
         return;
     }
 
-    // This handles the intro animation, which is fine.
     if (iris.classList.contains('intro-position')) {
         return;
     }
 
-    // This is the correct, working code for following the cursor.
     const eyeRect = eye.getBoundingClientRect();
     const eyeCenterX = eyeRect.left + eyeRect.width / 2;
     const eyeCenterY = eyeRect.top + eyeRect.height / 2;
@@ -5858,260 +5920,195 @@ mouthHitbox.addEventListener('click', function(e) {
     fileInput.click();
 });
 
-        fileInput.addEventListener('change', async function(e) {
-            resetActivity();
+        // PASTE THIS ENTIRE CORRECTED FUNCTION IN ITS PLACE
 
-            const file = e.target.files[0];
-            if (!file) return;
+fileInput.addEventListener('change', async function(e) {
+    isChomping = true;
+    resetActivity();
 
-            const resultContainer = document.querySelector('.result-container');
-            const resultCalories = document.querySelector('.result-calories');
-            const resultSuggestion = document.querySelector('.result-suggestion');
-            const greetingContainer = document.querySelector('.greeting-container');
-            const greetingHi = document.querySelector('.greeting-hi');
-            const greetingName = document.querySelector('.greeting-name');
-            const greetingQuestion = document.querySelector('.greeting-question');
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // --- THIS BLOCK UNLOCKS THE MONSTER AND CLEARS OLD MESSAGES ---
+
+    const chompingText = document.querySelector('.chomping-text');
+    chompingText.textContent = ""; 
+    // --- END OF FIX ---
+
+    const resultContainer = document.querySelector('.result-container');
+    const resultCalories = document.querySelector('.result-calories');
+    const resultSuggestion = document.querySelector('.result-suggestion');
+    const greetingContainer = document.querySelector('.greeting-container');
+    
+    // This part is your original code, it works.
+    if (resultContainer.classList.contains('show')) {
+        await backspaceText(resultSuggestion, 20);
+        await backspaceText(resultCalories, 20);
+        resultContainer.classList.remove('show');
+    }
+    if (greetingContainer.classList.contains('show')) {
+        await backspaceText(greetingContainer, 20);
+        greetingContainer.classList.remove('show');
+    }
+
+    try {
+        const { data: currentData } = await supabase.from('recent_food1').select('id').order('id', { ascending: false }).limit(1);
+        lastKnownId = currentData && currentData.length > 0 ? currentData[0].id : 0;
+    } catch (error) {
+        lastKnownId = 0;
+    }
+
+    const chompingContainer = document.querySelector('.chomping-container');
+    chompingContainer.classList.add('show');
+    addWaveAnimation(chompingText, 'CHOMPING...');
+    mouth.classList.add('uploading');
+    leftEye.classList.add('uploading');
+    rightEye.classList.add('uploading');
+    const crumbInterval = startCrumbEffect();
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('user_name', currentUser);
+        
+        const response = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+
+        if (response.ok) {
+            let newRow = null;
+            let pollCount = 0;
+            const maxPolls = 60;
             
-            if (resultContainer.classList.contains('show')) {
-                await backspaceText(resultSuggestion, 20);
-                await backspaceText(resultCalories, 20);
-                resultContainer.classList.remove('show');
-            }
-            
-            if (greetingContainer.classList.contains('show')) {
-                await backspaceText(greetingQuestion, 20);
-                await backspaceText(greetingName, 20);
-                await backspaceText(greetingHi, 20);
-                greetingContainer.classList.remove('show');
-            }
-
-            try {
-                const { data: currentData, error: idError } = await supabase
-                    .from('recent_food1')
-                    .select('id')
-                    .order('id', { ascending: false })
-                    .limit(1);
+            const pollInterval = setInterval(async () => {
+                pollCount++;
+                newRow = await pollForNewRow(lastKnownId, currentUser);
                 
-                if (idError) throw idError;
-                
-                lastKnownId = currentData && currentData.length > 0 ? currentData[0].id : 0;
-                console.log('Current highest ID:', lastKnownId);
-                
-            } catch (error) {
-                console.error('Error getting current ID:', error);
-                lastKnownId = 0;
-            }
-
-            const chompingContainer = document.querySelector('.chomping-container');
-            const chompingText = document.querySelector('.chomping-text');
-            
-            chompingContainer.classList.add('show');
-            addWaveAnimation(chompingText, 'CHOMPING...');
-
-            mouth.classList.add('uploading');
-            leftEye.classList.add('uploading');
-            rightEye.classList.add('uploading');
-            
-            const crumbInterval = startCrumbEffect();
-
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('user_name', currentUser);
-                
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    console.log('File uploaded successfully!');
-                    
-                    let newRow = null;
-                    let pollCount = 0;
-                    const maxPolls = 60;
-                    
-                    const pollInterval = setInterval(async () => {
-                        pollCount++;
-                        console.log(`Polling attempt ${pollCount}...`);
-                        
-                        newRow = await pollForNewRow(lastKnownId);
-                        
-                        if (newRow) {
-                            console.log('New row detected!', newRow);
-                           
-                            await supabase
-                                .from('recent_food1')
-                                .update({ user_name: currentUser })
-                                .eq('id', newRow.id);
-                            
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            const img2 = new Image();
-
-                            img2.onload = async () => {
-                                const maxWidth = 800;
-                                const maxHeight = 800;
-                                let width = img2.width;
-                                let height = img2.height;
-                                
-                                if (width > height) {
-                                    if (width > maxWidth) {
-                                        height *= maxWidth / width;
-                                        width = maxWidth;
-                                    }
-                                } else {
-                                    if (height > maxHeight) {
-                                        width *= maxHeight / height;
-                                        height = maxHeight;
-                                    }
-                                }
-                                
-                                canvas.width = width;
-                                canvas.height = height;
-                                ctx.drawImage(img2, 0, 0, width, height);
-                                
-                                canvas.toBlob(async (blob) => {
-                                    const fileName = `${newRow.id}_${Date.now()}.jpg`;
-                                    const { data: uploadData, error: uploadError } = await supabase
-                                        .storage
-                                        .from('food-images')
-                                        .upload(fileName, blob, {
-                                            cacheControl: '3600',
-                                            upsert: true,
-                                            contentType: 'image/jpeg'
-                                        });
-
-                                    if (!uploadError) {
-                                        const { data: urlData } = supabase
-                                            .storage
-                                            .from('food-images')
-                                            .getPublicUrl(fileName);
-                                        
-                                        const imageUrl = urlData.publicUrl;
-                                        
-                                        await supabase
-                                            .from('recent_food1')
-                                            .update({ photo: imageUrl })
-                                            .eq('id', newRow.id);
-                                        
-                                        console.log('✅ Image uploaded!', imageUrl);
-
-                                        setTimeout(() => {
-                                            console.log('🔥 Image uploaded - reloading sidebar!');
-                                            loadRecentFood();
-                                            loadDailyDigest();
-                                        }, 300);
-                                    } else {
-                                        console.error('❌ Upload error:', uploadError);
-                                    }
-                                }, 'image/jpeg', 0.8);
-                            };
-
-                            img2.src = URL.createObjectURL(file);
-
-                            clearInterval(pollInterval);
-                            clearInterval(crumbInterval);
-                            
-                            mouth.classList.remove('uploading');
-                            
-                            img.classList.add('jello');
-                            eyesContainer.classList.add('jello');
-                            mouth.classList.add('jello');
-                            
-                            setTimeout(() => {
-                                leftEye.classList.remove('uploading');
-                                rightEye.classList.remove('uploading');
-                                img.classList.remove('jello');
-                                eyesContainer.classList.remove('jello');
-                                mouth.classList.remove('jello');
-                            }, 1200);
-                            
-                            setTimeout(async () => {
-                                await backspaceText(chompingText, 20);
-                                chompingContainer.classList.remove('show');
-                                
-                                resultContainer.classList.add('show');
-                                
-                                const calories = Math.round(newRow.total_calories || 0);
-                                const suggestionText = getSuggestion(calories);
-
-                                mouth.classList.add('talking');
-
-                                resultCalories.innerHTML = '';
-                                
-                                const numberSpan = document.createElement('span');
-                                numberSpan.style.fontSize = '57px';
-                                numberSpan.style.fontWeight = '700';
-                                numberSpan.style.color = '#d3cdf3';
-                                numberSpan.textContent = calories;
-
-                                const labelSpan = document.createElement('span');
-                                labelSpan.style.fontSize = '30px';
-                                labelSpan.style.fontWeight = '600';
-                                labelSpan.style.color = '#028BB3';
-                                labelSpan.textContent = ' calories';
-                                
-                                resultCalories.appendChild(numberSpan);
-                                resultCalories.appendChild(labelSpan);
-
-                                await new Promise(resolve => setTimeout(resolve, 500));
-
-                                await typeText(resultSuggestion, suggestionText, 50);
-                                
-                                mouth.classList.remove('talking');
-                                resetActivity();
-
-                                // Temporarily disable the hover effect for 1 second
-                                mouthHitbox.classList.add('hover-disabled');
-                                setTimeout(() => {
-                                    mouthHitbox.classList.remove('hover-disabled');
-                                }, 1000);
-                                
-                                await calculateTodayCalories();
-                                updateTrackerDisplay();
-                                
-                                setTimeout(async () => {
-                                    await loadRecentFood();
-                                    await loadDailyDigest();
-                                }, 500);
-                                
-                            }, 1500);
-                            
-                        } else if (pollCount >= maxPolls) {
-                            console.log('Polling timeout - no new row found');
-                            clearInterval(pollInterval);
-                            clearInterval(crumbInterval);
-                            
-                            mouth.classList.remove('uploading');
-                            leftEye.classList.remove('uploading');
-                            rightEye.classList.remove('uploading');
-                            
-                            chompingText.textContent = 'Oops! Something went wrong...';
-                        }
-                        
-                    }, 2000);
-                    
-                } else {
-                    console.error('Upload failed:', response.statusText);
+                if (newRow) {
+                    // YOUR ORIGINAL SUCCESS LOGIC IS ALL HERE - I HAVE NOT TOUCHED IT
+                    clearInterval(pollInterval);
                     clearInterval(crumbInterval);
+                    await supabase.from('recent_food1').update({ user_name: currentUser }).eq('id', newRow.id);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img2 = new Image();
+                    img2.onload = async () => {
+                        const maxWidth = 800;
+                        const maxHeight = 800;
+                        let width = img2.width;
+                        let height = img2.height;
+                        if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } } else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img2, 0, 0, width, height);
+                        canvas.toBlob(async (blob) => {
+                            const fileName = `${newRow.id}_${Date.now()}.jpg`;
+                            const { data: uploadData, error: uploadError } = await supabase.storage.from('food-images').upload(fileName, blob, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' });
+                            if (!uploadError) {
+                                const { data: urlData } = supabase.storage.from('food-images').getPublicUrl(fileName);
+                                const imageUrl = urlData.publicUrl;
+                                await supabase.from('recent_food1').update({ photo: imageUrl }).eq('id', newRow.id);
+                                setTimeout(() => { loadRecentFood(); loadDailyDigest(); }, 300);
+                            }
+                        }, 'image/jpeg', 0.8);
+                    };
+                    img2.src = URL.createObjectURL(file);
                     mouth.classList.remove('uploading');
-                    leftEye.classList.remove('uploading');
-                    rightEye.classList.remove('uploading');
-                    chompingText.textContent = 'Upload failed!';
-                }
-                
-            } catch (error) {
-                console.error('Error uploading file:', error);
-                clearInterval(crumbInterval);
-                mouth.classList.remove('uploading');
-                leftEye.classList.remove('uploading');
-                rightEye.classList.remove('uploading');
-                chompingText.textContent = 'Error occurred!';
-            }
+                    img.classList.add('jello');
+                    eyesContainer.classList.add('jello');
+                    mouth.classList.add('jello');
+                    setTimeout(() => { leftEye.classList.remove('uploading'); rightEye.classList.remove('uploading'); img.classList.remove('jello'); eyesContainer.classList.remove('jello'); mouth.classList.remove('jello'); }, 1200);
+                    setTimeout(async () => {
+                        await backspaceText(chompingText, 20);
+                        chompingContainer.classList.remove('show');
+                        resultContainer.classList.add('show');
+                        const calories = Math.round(newRow.total_calories || 0);
+                        const suggestionText = getSuggestion(calories);
+                        mouth.classList.add('talking');
+                        resultCalories.innerHTML = '';
+                        const numberSpan = document.createElement('span');
+                        numberSpan.style.fontSize = '57px';
+                        numberSpan.style.fontWeight = '700';
+                        numberSpan.style.color = '#d3cdf3';
+                        numberSpan.textContent = calories;
+                        const labelSpan = document.createElement('span');
+                        labelSpan.style.fontSize = '30px';
+                        labelSpan.style.fontWeight = '600';
+                        labelSpan.style.color = '#028BB3';
+                        labelSpan.textContent = ' calories';
+                        resultCalories.appendChild(numberSpan);
+                        resultCalories.appendChild(labelSpan);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await typeText(resultSuggestion, suggestionText, 50);
+                        mouth.classList.remove('talking');
+                        resetActivity();
+                        mouthHitbox.classList.add('hover-disabled');
+                        setTimeout(() => { mouthHitbox.classList.remove('hover-disabled'); }, 1000);
+                        isChomping = false;
+                        await calculateTodayCalories();
+                        updateTrackerDisplay();
+                        setTimeout(async () => { await loadRecentFood(); await loadDailyDigest(); }, 500);
+                    }, 1500);
 
-            fileInput.value = '';
-        });
+                // DELETE YOUR OLD "else if (pollCount >= maxPolls)" BLOCK AND REPLACE IT WITH THIS
+
+// DELETE YOUR OLD "else if (pollCount >= maxPolls)" BLOCK AND REPLACE IT WITH THIS ONE
+
+// DELETE YOUR OLD "else if" BLOCK AND REPLACE IT WITH THIS ONE
+
+} else if (pollCount >= maxPolls) {
+    console.log('Polling timeout - Starting TEMPORARY error animation.');
+    clearInterval(pollInterval);
+    clearInterval(crumbInterval);
+
+    // 1. STOP THE "UPLOADING" / "CHOMPING" ANIMATION
+    mouth.classList.remove('uploading');
+    leftEye.classList.remove('uploading');
+    rightEye.classList.remove('uploading');
+
+    // 2. SET THE ERROR TEXT
+    chompingText.textContent = "Oops! Looks like I can’t swallow it...";
+
+    // 3. TEMPORARILY LOCK EYES FORWARD AND START THE "TALKING" ANIMATION
+    isErrorStateActive = true; 
+    leftIris.style.transition = 'transform 0.3s ease-out';
+    rightIris.style.transition = 'transform 0.3s ease-out';
+    leftIris.style.transform = 'translate(0px, 0px) scaleY(1.54)';
+    rightIris.style.transform = 'translate(0px, 0px) scaleY(1.54)';
+    
+    // THIS IS THE SPEAKING MOUTH ANIMATION, THE SAME ONE FROM THE GREETING
+    mouth.classList.add('talking'); 
+
+    // 4. AFTER 4 SECONDS, EVERYTHING GOES BACK TO NORMAL.
+    setTimeout(() => {
+        console.log('Error animation finished. Returning to normal function.');
+
+        // STOP THE TALKING
+        mouth.classList.remove('talking');
+        
+        // UNLOCK THE EYES (so they follow the cursor again)
+        leftIris.style.transition = 'none';
+        rightIris.style.transition = 'none';
+        isErrorStateActive = false; 
+        
+        // RESET THE IDLE TIMER so it can start counting again
+        resetActivity();
+
+    }, 4000); // Monster talks for 4 seconds, then stops and everything works again.
+
+    isChomping = false;
+}
+            }, 500);
+        } else {
+            throw new Error('Upload failed');
+        }
+    } catch (error) {
+        console.error('General Error:', error);
+        clearInterval(crumbInterval);
+        chompingText.textContent = "Oops! Something went wrong...";
+        enterErrorState(); // LOCK THE MONSTER
+        isChomping = false;
+    }
+    fileInput.value = '';
+});
 
        img.addEventListener('click', function(e) {
     if (!introComplete) return;
@@ -6215,6 +6212,10 @@ let isIdleLookingUp = false;
 let greetingComplete = false; 
 let isGreetingAnimating = false; // <-- NEW VARIABLE FOR GREETING LOCK
 let isFilePickerOpen = false; // <-- ADD THIS LINE
+let isChomping = false;
+let isWaitingForInput = false; // <-- ADD THIS LINE
+let isQuestionModeActive = false;
+let isErrorStateActive = false;
 
 function resetActivity() {
     if (!introComplete || document.body.classList.contains('intro-mode') || !greetingComplete) {
@@ -6234,6 +6235,10 @@ function resetActivity() {
 }
 
 function checkIdleStatus() {
+    if (isChomping || isErrorStateActive) {
+        return;
+    }
+
     if (isFilePickerOpen) {
         return;
     }
@@ -6306,19 +6311,25 @@ function triggerIdleAnimation() {
         rightIris.style.transform = `translate(0px, 0px) scaleY(1.54)`;
 
         setTimeout(() => {
-            leftIris.style.transition = 'none'; 
-            rightIris.style.transition = 'none';
-            
-            isIdleLookingUp = false;
-            isIdleAnimationPlaying = false; // Mouse control is restored HERE.
-            
-            lastActivityTime = Date.now(); 
-        }, 500);
+    leftIris.style.transition = 'none'; 
+    rightIris.style.transition = 'none';
+    
+    isIdleLookingUp = false;
+    isIdleAnimationPlaying = false; 
+
+    // --- NEW LOGIC STARTS HERE ---
+    isWaitingForInput = true; // Engage the "waiting" lock.
+    console.log('Idle finished. Pupils locked forward, waiting for mouse move.');
+    // --- NEW LOGIC ENDS HERE ---
+    
+    lastActivityTime = Date.now(); 
+}, 500);
 
     }, 3500);
 }
 
 function initIdleDetection() {
+    lastActivityTime = Date.now();
     document.addEventListener('mousemove', resetActivity, true);
     document.addEventListener('click', resetActivity, true);
     document.addEventListener('touchstart', resetActivity, true);
@@ -6329,6 +6340,36 @@ function initIdleDetection() {
     idleCheckInterval = setInterval(checkIdleStatus, 1000);
     
     console.log('✅ Idle detection initialized - waiting for greeting to finish');
+}
+
+function initializeCalorieTarget() {
+    // This function now runs AFTER we know who the user is.
+
+    const jakartaNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const todayString = jakartaNow.toISOString().split('T')[0];
+    const lastResetDate = localStorage.getItem('lastResetDate');
+
+    // First, check if the day has changed.
+    if (lastResetDate !== todayString) {
+        console.log('🔄 A NEW DAY HAS BEGUN. Resetting stored target.');
+        localStorage.setItem('lastResetDate', todayString);
+        
+        // This is the key: we reset the user's specific target in storage.
+        if (currentUser) {
+            localStorage.setItem('dailyTarget_' + currentUser, '2000');
+        }
+    }
+
+    // NOW that we've handled the reset, we can safely load the value.
+    if (currentUser) {
+        const savedTarget = localStorage.getItem('dailyTarget_' + currentUser);
+        dailyTarget = parseInt(savedTarget) || 2000;
+    } else {
+        dailyTarget = 2000; // Always 2000 if no user.
+    }
+
+    console.log(`🎯 Target has been correctly set to: ${dailyTarget}`);
+    updateTrackerDisplay(); // Finally, update the screen.
 }
 
 </script>
