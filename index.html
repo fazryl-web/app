@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHOMPER</title>
 
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1GaVKxiUAydh44O59vEGBoOp12zDEPFND">
+
     <!-- Preload critical images -->
 <link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1S-cQW23ONxoAVwM0X99qYy6o8fKqFBnj">
 <link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1uhVdXmNWmdVZaAKcF7e21usugl2jUW8_">
@@ -12,6 +14,7 @@
 <link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1gyLbB4UbPqhIw2vTAOLOVgZJmt2EXNL8">
 <link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1belFS5DhB5ooh3_i9sWlYFWA2-VggPC8">
 <link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1TNXeFTAjxc461Xa4Pbaop-rOOTavCrwZ">
+ <link rel="preload" as="image" href="https://lh3.googleusercontent.com/d/1S-cQW23ONxoAVwM0X99qYy6o8fKqFBnj">
 
    <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2057,7 +2060,7 @@ body.intro-mode .bottom-right-image * {
 
         .tutorial-image-container {
             width: 100%;
-            height: 180px;
+            height: 192px;
             background: #f5f5f5;
             border-radius: 10px 10px 0 0;
             display: flex;
@@ -2069,7 +2072,7 @@ body.intro-mode .bottom-right-image * {
         .tutorial-image-container img {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain;
+            object-fit: cover;
         }
 
         .tutorial-nav {
@@ -2120,7 +2123,7 @@ body.intro-mode .bottom-right-image * {
         .tutorial-text-container {
             flex: 1;
             padding: 10px 20px 15px 20px;
-            overflow-y: auto;
+            overflow-y: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -4063,6 +4066,7 @@ body:not(.intro-mode) .bottom-right-image {
                         <div class="tutorial-dot"></div>
                         <div class="tutorial-dot"></div>
                         <div class="tutorial-dot"></div>
+                        <div class="tutorial-dot"></div>
                     </div>
                     
                     <button class="tutorial-nav-button" id="tutorialNext">
@@ -4628,30 +4632,44 @@ function updateQuestionDisplay() {
                 updateQuestionDisplay();
             } else {
                 try {
-                    const { error } = await supabase
-                        .from('user_database')
-                        .update({
-                            name: questionData.name,
-                            age: parseInt(questionData.age),
-                            height: parseInt(questionData.height),
-                            weight: parseInt(questionData.weight)
-                        })
-                        .eq('user_name', currentUser);
-                    
-                    if (error) throw error;
-                    
-                    console.log('User data saved successfully');
-                    
-                    hideQuestionBubble();
-                    
-                    setTimeout(() => {
-                        showGreeting(questionData.name);
-                    }, 500);
-                    
-                } catch (error) {
-                    console.error('Error saving user data:', error);
-                    alert('Error saving your information. Please try again.');
-                }
+    const { error } = await supabase
+        .from('user_database')
+        .update({
+            name: questionData.name,
+            age: parseInt(questionData.age),
+            height: parseInt(questionData.height),
+            weight: parseInt(questionData.weight)
+        })
+        .eq('user_name', currentUser);
+    
+    if (error) throw error;
+    
+    console.log('User data saved successfully');
+    
+    hideQuestionBubble();
+
+    // --- FIX STARTS HERE ---
+
+    // 1. FIX: Immediately remove 'intro-mode' to hide the account icon.
+    document.body.classList.remove('intro-mode');
+    
+    // 2. FIX: Start the idle detection that was skipped for new users.
+    initIdleDetection();
+    
+    // 3. FIX: Put the eyes in the "waiting for mouse move" state to enable tracking.
+    isWaitingForInput = true;
+
+    // --- FIX ENDS HERE ---
+    
+    setTimeout(() => {
+        showGreeting(questionData.name);
+    }, 500);
+    
+} catch (error) {
+    console.error('Error saving user data:', error);
+    alert('Error saving your information. Please try again.');
+}
+
             }
         });
 
@@ -5485,28 +5503,33 @@ setTimeout(() => {
         const tutorialTextContainer = document.getElementById('tutorialTextContainer');
 
         let currentTutorialPage = 0;
-        const totalTutorialPages = 4;
+        const totalTutorialPages = 5;
 
         const tutorialPages = [
             {
-                image: '',
+                image: 'https://lh3.googleusercontent.com/d/1t6QGFPHW-klRmzLefuPVCj2yE8b7aiI5',
                 title: '1. Add Your Details',
                 text: 'Fill in your name and other basic details, this helps Chomper personalize your experience and track your progress.'
             },
             {
-                image: '',
+                image: 'https://lh3.googleusercontent.com/d/1ih53KwiktQzfRhLQQaozQ54fuCQJ6RwE',
                 title: '2. Upload Your Food Photo',
                 text: 'Hover your mouse over Chomper’s mouth, when it opens, drop or click it to upload your food photo.'
             },
             {
-                image: '',
+                image: 'https://lh3.googleusercontent.com/d/1AJ7NfgjSPpiz5--14UDBzI2CD7rV57Xs',
                 title: '3. Chomper Analyzes Your Food',
                 text: 'Chomper instantly identifies the food and show the estimated calories. Your recent meal history updates on the sidebar.'
             },
             {
-                image: '',
+                image: 'https://lh3.googleusercontent.com/d/10TnCJdb0ZgyDVroPtKoPLUTDpCQiJdE7',
                 title: '4. Set Your Daily Calorie Goal',
                 text: 'You can adjust your target calories and track your progress throughout the day in the daily digest menu from the sidebar.'
+            },
+            {
+                image: 'https://lh3.googleusercontent.com/d/1NWZnQvdHvxeU6Tvo4qLsPUqQQldjDoPO',
+                title: '5. Pet Your Chomper',
+                text: 'Give Chomper a little pet to wake him up — he’ll be ready to analyze your food and track your progress in no time!.'
             }
         ];
 
