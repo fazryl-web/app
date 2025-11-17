@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="theme-color" content="#ffffff">
     <title>CHOMPER</title>
 
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1GaVKxiUAydh44O59vEGBoOp12zDEPFND">
@@ -24,6 +27,78 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
 <style>
+        /* ========================================
+           ULTIMATE PROTECTION - BLOCKS DARK MODE + HIGH CONTRAST
+           ======================================== */
+        
+        /* Force light mode - blocks system dark mode */
+        :root {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+        }
+
+        * {
+            color-scheme: only light !important;
+            forced-color-adjust: none !important;
+        }
+
+        /* Block Windows High Contrast Mode */
+        @media (prefers-contrast: high), (prefers-contrast: more) {
+            :root {
+                forced-color-adjust: none !important;
+            }
+            
+            body {
+                background: white !important;
+                color: #1a1a1a !important;
+                forced-color-adjust: none !important;
+            }
+            
+            * {
+                forced-color-adjust: none !important;
+            }
+        }
+
+        /* Override dark mode preferences */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: only light !important;
+                forced-color-adjust: none !important;
+            }
+            
+            html, body {
+                background: white !important;
+                color: #1a1a1a !important;
+                filter: none !important;
+            }
+            
+            * {
+                forced-color-adjust: none !important;
+            }
+        }
+
+        /* Prevent browser extensions and filters */
+        html {
+            filter: none !important;
+            background-color: white !important;
+            forced-color-adjust: none !important;
+        }
+
+        body {
+            filter: none !important;
+            background-color: white !important;
+            forced-color-adjust: none !important;
+        }
+
+        /* Block print color adjustments */
+        @media print {
+            * {
+                forced-color-adjust: none !important;
+                print-color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+        }
+
         /* ========================================
            SCALING SYSTEM - KEEPS 1366x768 PERFECT PROPORTIONS
            ======================================== */
